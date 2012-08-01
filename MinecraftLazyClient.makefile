@@ -28,7 +28,7 @@ fix_path = $(subst /,\,$1)
 # The function that convert a path in Unix style to the one in Windows style.
 
 
-initial: | $(SOURCE_DIR)
+initial: $(SOURCE_DIR)
 
 $(SOURCE_DIR):
 	md $@
@@ -62,7 +62,23 @@ $(mc_bat): | $(mc_dir)
 # so that it doesn't matter where the current directory is.
 
 
-first-run:
+first-run: $(mc_jar).bak
+
+# This step is annoying and wasting time.
+# No one wants to do it again and again.
+# So once it has been done, it will not update anymore.
+# When update is really needed, just `make clean' and do it all again.
+
+$(mc_jar): | portable-basis
+	@echo ** Please login, take the first run and quit the game manually.
+	set APPDATA=$(mc_dir)&& javaw -Xms512M -Xmx1024M -jar $(mc_lch)
+
+# Note that `&&' must right behind the $(mc_dir), or
+# any space will cause the value of APPDATA wrong.
+
+$(mc_jar).bak: | $(mc_jar)
+	copy $(mc_jar) $@
+
 
 install-mods:
 
