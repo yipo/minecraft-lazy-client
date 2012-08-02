@@ -28,12 +28,23 @@ fix_path = $(subst /,\,$1)
 # The function that convert a path in Unix style to the one in Windows style.
 
 
-initial: $(SOURCE_DIR)
+
+initial: $(SOURCE_DIR) tool\7za.exe
 
 $(SOURCE_DIR):
 	md $@
 
 # This will create a $(SOURCE_DIR) for you if you don't have one yet.
+
+tool:
+	md $@
+
+tool\7za.exe: | tool
+	@echo ** 7za (can be got from: http://www.7-zip.org/) is needed.
+	@echo ** Put the 7za.exe in tool\ folder.
+	@exit 1
+
+# It is wired to use this script without extracting or creating any archive.
 
 
 portable-basis: initial $(mc_lch) $(mc_bat)
