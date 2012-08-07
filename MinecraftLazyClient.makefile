@@ -15,6 +15,30 @@ MOD_LIST ?=
 # If MOD_LIST is empty, no mod will be installed,
 # `first-run' will not be executed and just a portable Minecraft will you get.
 
+# - Syntax:
+# MOD_LIST = [<target> ...]
+# <target> = <mod-name>.<method>
+# <method> = mod | mlm
+
+# - Example:
+# MOD_LIST = ModLoader.mod OptiFine.mod ReiMinimap.mlm InvTweaks.mlm
+
+# ** mod-name: the name of the mod.
+# By default, this script will find the `*<mod-name>*.zip' for installation.
+# Ex: `ReiMinimap.mlm' can match the file `[1.3.1]ReiMinimap_v3.2_05.zip'.
+
+# If multiple .zip file are matched, the last one in alphabetical order
+# (usually the newest one in version) will be chosen.
+
+# If no file is matched or the file matched is not you want,
+# write a rule to specify the file name.
+# Ex: ReiMinimap.mlm: TheFileYouWant.zip
+
+# ** method: the way to install the mod.
+# mod: for normal mods (add the .class files in `bin\minecraft.jar').
+# mlm: for mods require ModLoader (copy the .zip file to the `mods' folder).
+
+
 PHONY: initial portable-basis first-run install-mods packing
 PHONY: uninstall-mods clean
 
@@ -176,6 +200,17 @@ $(im_mlm): | $(mc_mod)
 
 # Make sure ModLoader is also installed if there are mods depend on it.
 # This script will not check this for you.
+
+
+auto_match_pattern = $(SOURCE_DIR)/*$(basename $(notdir $1))*.zip
+
+# Find the `*<mod-name>*.zip' file in $(SOURCE_DIR) folder.
+
+auto_match = $1: $(lastword $(wildcard $(call auto_match_pattern,$1)))
+
+# Take the last one in alphabetical order.
+
+$(foreach i,$(MOD_LIST),$(eval $(call auto_match,$(i))))
 
 
 packing:
