@@ -2,3 +2,5 @@ tool/
 source/
 MinecraftLazyClient/
 extract/
+/*.7z
+/Packing.list

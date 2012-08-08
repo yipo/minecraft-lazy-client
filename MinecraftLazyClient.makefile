@@ -1,19 +1,15 @@
 
 SOURCE_DIR ?= source
-LAUNCHER_JAR ?= minecraft.jar
-MOD_LIST ?=
 
-# SOURCE_DIR: (Optional)
 # The place to put all materials (.jar or .zip) in.
 # It works if you put materials in .\, but it's not recommended.
 
-# LAUNCHER_JAR: (Optional)
+LAUNCHER_JAR ?= minecraft.jar
+
 # The default value is the filename of the .jar official launcher.
 # The .exe version is also OK. However, the .jar version has a smaller size.
 
-# MOD_LIST: (Optional)
-# If MOD_LIST is empty, no mod will be installed,
-# `first-run' will not be executed and just a portable Minecraft will you get.
+MOD_LIST ?=
 
 # - Syntax:
 # MOD_LIST = [<target> ...]
@@ -21,7 +17,10 @@ MOD_LIST ?=
 # <method> = mod | mlm
 
 # - Example:
-# MOD_LIST = ModLoader.mod OptiFine.mod ReiMinimap.mlm InvTweaks.mlm
+# MOD_LIST = ModLoader.mod OptiFine.mod InvTweaks.mlm ReiMinimap.mlm
+
+# If MOD_LIST is empty, no mod will be installed,
+# `first-run' will not be executed and just a portable Minecraft will you get.
 
 # ** mod-name: the name of the mod.
 # By default, this script will find the `*<mod-name>*.zip' for installation.
@@ -38,9 +37,38 @@ MOD_LIST ?=
 # mod: for normal mods (add the .class files in `bin\minecraft.jar').
 # mlm: for mods require ModLoader (copy the .zip file to the `mods' folder).
 
+OUTPUT_FILE ?= MinecraftLazyClient.7z
+
+# The name of the output file.
+# Note that the filename extension will affect the way 7za compresses the file.
+
+PACKING ?=
+
+# - Syntax:
+# PACKING = [$(<predef-const>) ...] [<file-path> ...]
+# <predef-const> = PL_SETT | PL_SERV | PL_SAVE | PL_TXPK
+
+# - Example:
+# PACKING = $(PL_SETT) $(PL_SERV) .minecraft\config\InvTweaks*.txt
+
+# The additional files or folders you want to add in the pack.
+# Specify the path related to $(mc_dir). The constant below can also be used:
+
+# PL_SETT: the file record the settings.
+# PL_SERV: the file record the server list.
+# PL_SAVE: the `save' folder.
+# PL_TXPK: the `texturepacks' folder.
+
+PL_SETT = .minecraft\options.txt
+PL_SERV = .minecraft\servers.dat
+PL_SAVE = .minecraft\saves
+PL_TXPK = .minecraft\texturepacks
+
+# Note that placing '\' at end of a line means splitting lines.
+
 
 PHONY: initial portable-basis first-run install-mods packing
-PHONY: uninstall-mods clean
+PHONY: uninstall-mods packing-clean clean
 
 .SUFFIXES:
 .SUFFIXES: %.mod %.mlm
@@ -213,8 +241,24 @@ auto_match = $1: $(lastword $(wildcard $(call auto_match_pattern,$1)))
 $(foreach i,$(MOD_LIST),$(eval $(call auto_match,$(i))))
 
 
-packing:
+packing: install-mods packing-clean $(OUTPUT_FILE)
 
-clean:
+packing-clean:
+	-del $(OUTPUT_FILE) Packing.list
+
+$(OUTPUT_FILE): Packing.list
+	7za a $@ @Packing.list
+
+Packing.list:
+	>  $@ echo $(mc_dir)\.minecraft\bin
+	>> $@ echo $(mc_dir)\.minecraft\mods\*.zip
+	>> $@ echo $(mc_lch)
+	>> $@ echo $(mc_bat)
+	$(foreach i,$(PACKING),>> $@ echo $(mc_dir)\$(i)$(\n))
+
+# Actually, only few things are needed to make a package.
+
+
+clean: packing-clean
 	-rd /S /Q $(mc_dir) extract
 
