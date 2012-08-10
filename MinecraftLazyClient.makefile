@@ -99,10 +99,12 @@ fix_path = $(subst /,\,$1)
 
 # The function that convert a path in Unix style to the one in Windows style.
 
-touch = copy /B $1+,, $1
+touch = copy /B $1+,, $1 > nul
 
 # The command that change the date and time of a file as `touch' on Unix.
 # Reference: http://technet.microsoft.com/en-us/library/bb490886
+
+ok_msg = @echo [$1] OK
 
 
 initial: $(SOURCE_DIR) tool\7za.exe
@@ -124,6 +126,7 @@ tool\7za.exe: | tool
 
 
 portable-basis: initial $(mc_lch) $(mc_bat)
+	$(call ok_msg,$@)
 
 $(mc_dir):
 	md $@
@@ -134,7 +137,7 @@ $(mc_dir)\launcher: | $(mc_dir)
 # so that nobody will execute it directly by mistake (I thought).
 
 $(mc_lch): $(LAUNCHER_JAR) | $(mc_dir)\launcher
-	copy /Y $(call fix_path,$<) $@
+	copy /Y $(call fix_path,$<) $@ > nul
 
 # Update when there is a newer $(LAUNCHER_JAR).
 
@@ -150,6 +153,7 @@ $(mc_bat): | $(mc_dir)
 
 
 first-run: $(mc_jar).bak
+	$(call ok_msg,$@)
 
 # This step is annoying and wasting time.
 # So once it has been done, it will not update anymore.
@@ -163,7 +167,11 @@ $(mc_jar): | portable-basis
 # any space will cause the value of APPDATA wrong.
 
 $(mc_jar).bak: $(mc_jar)
-	$(if $(wildcard $@),copy /Y $@ $<$(\n)$(call touch,$@),copy $< $@)
+	$(if $(wildcard $@),                 \
+		@echo ** Restore $(mc_jar).$(\n) \
+		@copy /Y $@ $< > nul$(\n)        \
+		@$(call touch,$@),               \
+		copy $< $@ > nul)
 
 # Backup and restore $(mc_jar):
 # If $(mc_jar).bak does not exist yet, backup $(mc_jar) to $(mc_jar).bak.
@@ -192,9 +200,10 @@ uninstall-mods: -im-mod-clean -im-mlm-clean
 # Use $(mc_jar).bak as a prerequisite to restore $(mc_jar).
 
 -im-mod: $(im_mod)
-	-copy extract\*.jar $(mc_dir)\.minecraft\bin
+	-copy extract\*.jar $(mc_dir)\.minecraft\bin > nul
 	cd extract && 7za a $(CURDIR)\$(mc_jar) * -x!*.jar > nul
 	7za d $(mc_jar) META-INF > nul
+	$(call ok_msg,$@)
 
 # Installation of manual-install mods:
 # - Only .jar files (if any) will be copied to $(mc_dir)\.minecraft\bin.
@@ -207,6 +216,7 @@ extract:
 $(im_mod): | extract
 
 %.mod:
+	@echo [$@] $<
 	7za e $(call fix_path,$<) -oextract -y > nul
 
 # The order of targets in MOD_LIST does matter.
@@ -217,7 +227,7 @@ $(im_mod): | extract
 	-rd /S /Q $(mc_mod)
 
 -im-mlm: $(im_mlm)
-	@rem
+	$(call ok_msg,$@)
 
 $(mc_mod):
 	md $@
@@ -225,7 +235,8 @@ $(mc_mod):
 $(im_mlm): | $(mc_mod)
 
 %.mlm:
-	copy $(call fix_path,$<) $(mc_mod)
+	@echo [$@] $<
+	copy $(call fix_path,$<) $(mc_mod) > nul
 
 # Installation of the mods require ModLoader:
 # Simply copy the .zip file to $(mc_mod).
