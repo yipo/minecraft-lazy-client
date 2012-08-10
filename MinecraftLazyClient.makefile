@@ -1,4 +1,9 @@
 
+packing:
+
+# If no specified, the default target is `packing'.
+
+
 SOURCE_DIR ?= source
 
 # The place to put all materials (.jar or .zip) in.
@@ -51,8 +56,8 @@ PACKING ?=
 # - Example:
 # PACKING = $(PL_SETT) $(PL_SERV) .minecraft\config\InvTweaks*.txt
 
-# The additional files or folders you want to add in the pack.
-# Specify the path related to $(mc_dir). The constant below can also be used:
+# The additional files or folders you want to add in the package.
+# Specify the path related to $(mc_dir). The constants below can also be used:
 
 # PL_SETT: the file record the settings.
 # PL_SERV: the file record the server list.
@@ -105,7 +110,7 @@ initial: $(SOURCE_DIR) tool\7za.exe
 $(SOURCE_DIR):
 	md $@
 
-# This will create a $(SOURCE_DIR) for you if you don't have one yet.
+# This will create a $(SOURCE_DIR) folder if there is no one yet.
 
 tool:
 	md $@
@@ -115,7 +120,7 @@ tool\7za.exe: | tool
 	@echo ** Put the 7za.exe in tool\ folder.
 	@exit 1
 
-# It is wired to use this script without extracting or creating any archive.
+# It's wired to use this script without extracting or creating any archive.
 
 
 portable-basis: initial $(mc_lch) $(mc_bat)
@@ -126,7 +131,7 @@ $(mc_dir)\launcher: | $(mc_dir)
 	md $@
 
 # Hide the launcher.jar in `launcher' folder
-# so that nobody will execute it directly by mistake (I think).
+# so that nobody will execute it directly by mistake (I thought).
 
 $(mc_lch): $(LAUNCHER_JAR) | $(mc_dir)\launcher
 	copy /Y $(call fix_path,$<) $@
@@ -140,14 +145,13 @@ $(mc_bat): | $(mc_dir)
 
 # Sure, only the first line is beginning with `>'. The others are `>>'.
 # The parameter `-Xms512M -Xmx1024M' should be a good choice.
-# Add %APPDATA% in front of the path to the .jar file
+# Add %~dp0 in front of the path to the .jar file
 # so that it doesn't matter where the current directory is.
 
 
 first-run: $(mc_jar).bak
 
 # This step is annoying and wasting time.
-# No one wants to do it again and again.
 # So once it has been done, it will not update anymore.
 # When update is really needed, just `make clean' and do it all again.
 
@@ -168,7 +172,7 @@ $(mc_jar).bak: $(mc_jar)
 
 PHONY: -im-mod-clean -im-mod -im-mlm-clean -im-mlm
 
-# It's not recommended to execute these target directly.
+# It's not recommended to execute these targets directly.
 
 im_mod = $(filter %.mod,$(MOD_LIST))
 im_mlm = $(filter %.mlm,$(MOD_LIST))
@@ -179,7 +183,7 @@ install-mods: $(if $(im_mlm),-im-mlm-clean -im-mlm)
 
 uninstall-mods: -im-mod-clean -im-mlm-clean
 
-# Execute the `uninstall-mods' target to remove all installed mods.
+# Execute the `uninstall-mods' target to remove all the installed mods.
 
 
 -im-mod-clean: $(mc_jar).bak
@@ -223,8 +227,8 @@ $(im_mlm): | $(mc_mod)
 %.mlm:
 	copy $(call fix_path,$<) $(mc_mod)
 
-# Installation of ModLoader mods:
-# Simply copy the .zip files to $(mc_mod).
+# Installation of the mods require ModLoader:
+# Simply copy the .zip file to $(mc_mod).
 
 # Make sure ModLoader is also installed if there are mods depend on it.
 # This script will not check this for you.
@@ -261,4 +265,7 @@ Packing.list:
 
 clean: packing-clean
 	-rd /S /Q $(mc_dir) extract
+
+super-clean: clean
+	-rd /S /Q tool $(SOURCE_DIR)
 
