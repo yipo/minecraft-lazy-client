@@ -72,7 +72,7 @@ PL_TXPK = .minecraft\texturepacks
 # Note that placing '\' at end of a line means splitting lines.
 
 
-PHONY: initial portable-basis first-run install-mods packing
+PHONY: initial portable-basis first-run install-mods post-processing packing
 PHONY: uninstall-mods packing-clean clean
 
 .SUFFIXES:
@@ -105,6 +105,11 @@ touch = copy /B $1+,, $1 > nul
 # Reference: http://technet.microsoft.com/en-us/library/bb490886
 
 ok_msg = @echo [$1] OK
+
+run_mc = set APPDATA=$(mc_dir)&& javaw -Xms512M -Xmx1024M -jar $(mc_lch)
+
+# Note that `&&' must right behind the $(mc_dir), or
+# any space will cause the value of APPDATA wrong.
 
 
 initial: $(SOURCE_DIR) tool\7za.exe
@@ -161,10 +166,7 @@ first-run: $(mc_jar).bak
 
 $(mc_jar): | portable-basis
 	@echo ** Please login, take the first run and quit the game manually.
-	set APPDATA=$(mc_dir)&& javaw -Xms512M -Xmx1024M -jar $(mc_lch)
-
-# Note that `&&' must right behind the $(mc_dir), or
-# any space will cause the value of APPDATA wrong.
+	$(run_mc)
 
 $(mc_jar).bak: $(mc_jar)
 	$(if $(wildcard $@),                 \
@@ -256,7 +258,19 @@ auto_match = $1: $(lastword $(wildcard $(call auto_match_pattern,$1)))
 $(foreach i,$(MOD_LIST),$(eval $(call auto_match,$(i))))
 
 
-packing: install-mods packing-clean $(OUTPUT_FILE)
+post-processing:
+
+# Users can do something before packing.
+# Note that don't let this target become the default target.
+# (i.e. This target should not be the first target in your makefile.)
+# (Or just define this target below the include statement of this makefile.)
+
+# The variables in this makefile like $(mc_dir), $(\n), $(ok_msg), etc
+# can be used in the user-defined recipes.
+# Running Minecraft again, use $(run_mc).
+
+
+packing: install-mods post-processing packing-clean $(OUTPUT_FILE)
 
 packing-clean:
 	-del $(OUTPUT_FILE) Packing.list
