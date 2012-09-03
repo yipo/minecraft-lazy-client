@@ -108,7 +108,12 @@ touch = copy /B $1+,, $1 > nul
 
 ok_msg = @echo [$1] OK
 
-run_mc = set APPDATA=$(mc_dir)&& javaw -Xms512M -Xmx1024M -jar $(mc_lch)
+java_arg = -Xms512M -Xmx1024M
+
+# The arguments for `java' command used by the whole script.
+# The setting `-Xms512M -Xmx1024M' should be a good choice.
+
+run_mc = set APPDATA=$(mc_dir)&& javaw $(java_arg) -jar $(mc_lch)
 
 # Note that `&&' must right behind the $(mc_dir), or
 # any space will cause the value of APPDATA wrong.
@@ -151,10 +156,9 @@ $(mc_lch): $(LAUNCHER_JAR) | $(mc_dir)\launcher
 $(mc_bat): | $(mc_dir)
 	>  $@ echo @ECHO OFF
 	>> $@ echo SET APPDATA=%%~dp0
-	>> $@ echo START javaw -Xms512M -Xmx1024M -jar %%~dp0\launcher\launcher.jar
+	>> $@ echo START javaw $(java_arg) -jar %%~dp0\launcher\launcher.jar
 
 # Sure, only the first line is beginning with `>'. The others are `>>'.
-# The parameter `-Xms512M -Xmx1024M' should be a good choice.
 # Add %~dp0 in front of the path to the .jar file
 # so that it doesn't matter where the current directory is.
 
