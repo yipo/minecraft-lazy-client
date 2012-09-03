@@ -156,7 +156,7 @@ $(mc_lch): $(LAUNCHER_JAR) | $(mc_dir)\launcher
 $(mc_bat): | $(mc_dir)
 	>  $@ echo @ECHO OFF
 	>> $@ echo SET APPDATA=%%~dp0
-	>> $@ echo START javaw $(java_arg) -jar %%~dp0\launcher\launcher.jar
+	>> $@ echo START javaw $(java_arg) -jar "%%~dp0\launcher\launcher.jar"
 
 # Sure, only the first line is beginning with `>'. The others are `>>'.
 # Add %~dp0 in front of the path to the .jar file
