@@ -78,6 +78,8 @@ PHONY: uninstall-mods packing-clean clean
 .SUFFIXES:
 .SUFFIXES: %.mod %.mlm
 
+SHELL = cmd.exe
+
 VPATH = $(SOURCE_DIR)
 
 mc_dir = MinecraftLazyClient
