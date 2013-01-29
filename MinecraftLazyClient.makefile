@@ -225,7 +225,7 @@ $(im_mod): | extract
 
 %.mod:
 	@echo [$@] $<
-	7za e $(call fix_path,$<) -oextract -y > nul
+	7za x $(call fix_path,$<) -oextract -y > nul
 
 # The order of targets in MOD_LIST does matter.
 # If any files are conflicted, the former will be overwrite by the latter.
