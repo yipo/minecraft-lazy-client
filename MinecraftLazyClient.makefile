@@ -83,7 +83,7 @@ SHELL = cmd.exe
 VPATH = $(SOURCE_DIR)
 
 mc_dir = MinecraftLazyClient
-mc_lch = $(mc_dir)\launcher\launcher.jar
+mc_lch = $(mc_dir)\.minecraft\launcher.jar
 mc_bat = $(mc_dir)\Minecraft.bat
 mc_jar = $(mc_dir)\.minecraft\bin\minecraft.jar
 mc_mod = $(mc_dir)\.minecraft\mods
@@ -141,13 +141,13 @@ portable-basis: initial $(mc_lch) $(mc_bat)
 
 $(mc_dir):
 	md $@
-$(mc_dir)\launcher: | $(mc_dir)
+$(mc_dir)\.minecraft: | $(mc_dir)
 	md $@
 
-# Hide the launcher.jar in `launcher' folder
+# Hide the launcher.jar in `.minecraft' folder
 # so that nobody will execute it directly by mistake (I thought).
 
-$(mc_lch): $(LAUNCHER_JAR) | $(mc_dir)\launcher
+$(mc_lch): $(LAUNCHER_JAR) | $(mc_dir)\.minecraft
 	copy /Y $(call fix_path,$<) $@ > nul
 
 # Update when there is a newer $(LAUNCHER_JAR).
@@ -155,7 +155,7 @@ $(mc_lch): $(LAUNCHER_JAR) | $(mc_dir)\launcher
 $(mc_bat): | $(mc_dir)
 	>  $@ echo @ECHO OFF
 	>> $@ echo SET APPDATA=%%~dp0
-	>> $@ echo CD "%%~dp0\launcher"
+	>> $@ echo CD "%%~dp0\.minecraft"
 	>> $@ echo START %%* javaw $(java_arg) -jar launcher.jar
 
 # Sure, only the first line is beginning with `>'. The others are `>>'.
