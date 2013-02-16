@@ -113,10 +113,9 @@ java_arg = -Xms512M -Xmx1024M
 # The arguments for `java' command used by the whole script.
 # The setting `-Xms512M -Xmx1024M' should be a good choice.
 
-run_mc = set APPDATA=$(mc_dir)&& javaw $(java_arg) -jar $(mc_lch)
+run_mc = $(mc_bat) /WAIT
 
-# Note that `&&' must right behind the $(mc_dir), or
-# any space will cause the value of APPDATA wrong.
+# Run Minecraft via $(mc_bat) consistently but wait for termination.
 
 
 initial: $(SOURCE_DIR) tool\7za.exe
@@ -156,11 +155,12 @@ $(mc_lch): $(LAUNCHER_JAR) | $(mc_dir)\launcher
 $(mc_bat): | $(mc_dir)
 	>  $@ echo @ECHO OFF
 	>> $@ echo SET APPDATA=%%~dp0
-	>> $@ echo START javaw $(java_arg) -jar "%%~dp0\launcher\launcher.jar"
+	>> $@ echo CD "%%~dp0\launcher"
+	>> $@ echo START %%* javaw $(java_arg) -jar launcher.jar
 
 # Sure, only the first line is beginning with `>'. The others are `>>'.
-# Add %~dp0 in front of the path to the .jar file
-# so that it doesn't matter where the current directory is.
+# Using %~dp0 so that it doesn't matter where the current directory is.
+# Using %* so that we can add the argument /WAIT to the START command.
 
 
 first-run: $(mc_jar).bak
