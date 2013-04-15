@@ -253,7 +253,7 @@ $(im_mlm): | $(mc_mod)
 # This script will not check this for you.
 
 
-auto_match_pattern = $(SOURCE_DIR)/*$(basename $(notdir $1))*.zip
+auto_match_pattern = $(SOURCE_DIR)/*$(basename $(notdir $1))*.*
 
 # Find the `*<mod-name>*.zip' file in $(SOURCE_DIR) folder.
 
@@ -287,6 +287,7 @@ $(OUTPUT_FILE): Packing.list
 Packing.list:
 	>  $@ echo $(mc_dir)\.minecraft\bin
 	>> $@ echo $(mc_dir)\.minecraft\mods\*.zip
+	>> $@ echo $(mc_dir)\.minecraft\mods\*.jar
 	>> $@ echo $(mc_lch)
 	>> $@ echo $(mc_bat)
 	$(foreach i,$(PACKING),>> $@ echo $(mc_dir)\$(i)$(\n))
