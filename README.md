@@ -1,5 +1,5 @@
 
-# MinecraftLazyClient.makefile
+# Minecraft Lazy Client
 
 Install one of the following make tools to *make* on Windows:
 

@@ -1,2 +1,2 @@
 
-include MinecraftLazyClient.makefile
+include MinecraftLazyClient.mak
