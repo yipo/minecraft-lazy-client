@@ -57,7 +57,7 @@ PACKING ?=
 
 # - Syntax:
 # PACKING = [$(<predef-const>) ...] [<file-path> ...]
-# <predef-const> = PL_SETT | PL_SERV | PL_SAVE | PL_TXPK
+# <predef-const> = PL_SETT | PL_SERV | PL_SAVE | PL_RSPK
 
 # - Example:
 # PACKING = $(PL_SETT) $(PL_SERV) .minecraft\config\InvTweaks*.txt
@@ -68,12 +68,12 @@ PACKING ?=
 # PL_SETT: the file record the settings.
 # PL_SERV: the file record the server list.
 # PL_SAVE: the `save' folder.
-# PL_TXPK: the `texturepacks' folder.
+# PL_RSPK: the `resourcepacks' folder.
 
 PL_SETT = .minecraft\options.txt
 PL_SERV = .minecraft\servers.dat
 PL_SAVE = .minecraft\saves
-PL_TXPK = .minecraft\texturepacks
+PL_RSPK = .minecraft\resourcepacks
 
 # Note that placing '\' at end of a line means splitting lines.
 
