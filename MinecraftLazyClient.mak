@@ -1,3 +1,9 @@
+# Minecraft Lazy Client v1.0
+# (for the launcher of Minecraft version <= 1.5.2)
+# GitHub: https://github.com/yipo/minecraft-lazy-client
+# Author: Yi-Pu Guo (YiPo)
+# License: MIT
+
 
 packing:
 
