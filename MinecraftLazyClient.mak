@@ -89,7 +89,7 @@ SHELL = cmd.exe
 VPATH = $(SOURCE_DIR)
 
 mc_dir = MinecraftLazyClient
-mc_lch = $(mc_dir)\.minecraft\launcher.jar
+mc_lch = $(mc_dir)\.minecraft\mc-launcher.jar
 mc_bat = $(mc_dir)\Minecraft.bat
 mc_jar = $(mc_dir)\.minecraft\bin\minecraft.jar
 mc_mod = $(mc_dir)\.minecraft\mods
@@ -150,7 +150,7 @@ $(mc_dir):
 $(mc_dir)\.minecraft: | $(mc_dir)
 	md $@
 
-# Hide the launcher.jar in `.minecraft' folder
+# Hide the mc-launcher.jar in `.minecraft' folder
 # so that nobody will execute it directly by mistake (I thought).
 
 $(mc_lch): $(LAUNCHER_JAR) | $(mc_dir)\.minecraft
@@ -162,7 +162,7 @@ $(mc_bat): | $(mc_dir)
 	>  $@ echo @ECHO OFF
 	>> $@ echo SET APPDATA=%%~dp0
 	>> $@ echo CD "%%~dp0\.minecraft"
-	>> $@ echo START %%* javaw $(java_arg) -jar launcher.jar
+	>> $@ echo START %%* javaw $(java_arg) -jar mc-launcher.jar
 
 # Sure, only the first line is beginning with `>'. The others are `>>'.
 # Using %~dp0 so that it doesn't matter where the current directory is.
