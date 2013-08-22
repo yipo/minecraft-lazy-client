@@ -124,7 +124,7 @@ run_mc = $(mc_bat) /WAIT
 # Run Minecraft via $(mc_bat) consistently but wait for termination.
 
 
-initial: $(SOURCE_DIR) tool\7za.exe
+initial: $(SOURCE_DIR) tool\7za.exe tool\jq.exe
 
 $(SOURCE_DIR):
 	md $@
@@ -140,6 +140,13 @@ tool\7za.exe: | tool
 	@exit 1
 
 # It's wired to use this script without extracting or creating any archive.
+
+tool\jq.exe: | tool
+	@echo ** jq (can be got from: http://stedolan.github.io/jq/) is needed.
+	@echo ** Put the jq.exe in tool\ folder.
+	@exit 1
+
+# The tool to dealing with .json files.
 
 
 portable-basis: initial $(mc_lch) $(mc_bat)
