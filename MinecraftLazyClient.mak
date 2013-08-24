@@ -193,27 +193,27 @@ $(mc_bat): | $(mc_dir)
 # Using %* so that we can add the argument /WAIT to the START command.
 
 
-first-run: $(mc_jar).bak
+first-run: restore
 	$(call ok_msg,$@)
 
 # This step is annoying and wasting time.
 # So once it has been done, it will not update anymore.
 # When update is really needed, just `make clean' and do it all again.
 
-$(mc_jar): | portable-basis
-	@echo ** Please login, take the first run and quit the game manually.
+$(sou_dir): | portable-basis
+	@echo ** Please login, take the first run of the version $(sou)
+	@echo ** and then quit the game manually.
 	$(run_mc)
 
-$(mc_jar).bak: $(mc_jar)
-	$(if $(wildcard $@),                 \
-		@echo ** Restore $(mc_jar).$(\n) \
-		@copy /Y $@ $< > nul$(\n)        \
-		@$(call touch,$@),               \
-		copy $< $@ > nul)
+restore: $(sou_dir) $(if $(wildcard $(des_dir)),$(des_jar) $(des_jsn))
+	@echo ** Restore the version $(des) to a pure one.
+	-md $(des_dir) > nul
+	copy /Y $(sou_jar) $(des_jar) > nul
+	jq ".id = \"$(des)\"" < $(sou_jsn) > $(des_jsn)
+	@echo ** Update the restore timestamp.
+	> $@ echo.
 
-# Backup and restore $(mc_jar):
-# If $(mc_jar).bak does not exist yet, backup $(mc_jar) to $(mc_jar).bak.
-# Otherwise, restore $(mc_jar) from $(mc_jar).bak if $(mc_jar) is newer.
+# The `restore' target restore $(des) to a pure one only if that was modified.
 
 
 PHONY: -im-mod-clean -im-mod -im-mlm-clean -im-mlm
@@ -327,6 +327,7 @@ Packing.list:
 
 clean: packing-clean
 	-rd /S /Q $(mc_dir) extract
+	-del restore
 
 super-clean: clean
 	-rd /S /Q tool $(SOURCE_DIR)
