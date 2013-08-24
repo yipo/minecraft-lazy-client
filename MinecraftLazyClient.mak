@@ -20,6 +20,10 @@ LAUNCHER_JAR ?= minecraft.jar
 # The default value is the filename of the .jar official launcher.
 # The .exe version is also OK. However, the .jar version has a smaller size.
 
+BASED_ON_VER ?= 1.6.1
+
+# The version you want to install mods on.
+
 MOD_LIST ?=
 
 # - Syntax:
@@ -91,10 +95,23 @@ VPATH = $(SOURCE_DIR)
 mc_dir = MinecraftLazyClient
 mc_lch = $(mc_dir)\.minecraft\mc-launcher.jar
 mc_bat = $(mc_dir)\Minecraft.bat
-mc_jar = $(mc_dir)\.minecraft\bin\minecraft.jar
+mc_ver = $(mc_dir)\.minecraft\versions
 mc_mod = $(mc_dir)\.minecraft\mods
 
-# Just for a shorter name
+# Just for shorter names
+
+sou = $(BASED_ON_VER)
+des = $(sou)-mlc
+
+sou_dir = $(mc_ver)\$(sou)
+sou_jar = $(sou_dir)\$(sou).jar
+sou_jsn = $(sou_dir)\$(sou).json
+
+des_dir = $(mc_ver)\$(des)
+des_jar = $(des_dir)\$(des).jar
+des_jsn = $(des_dir)\$(des).json
+
+# This script will create a new version $(des) based on $(sou).
 
 define \n
 
