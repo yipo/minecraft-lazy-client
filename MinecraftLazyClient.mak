@@ -232,21 +232,19 @@ uninstall-mods: -im-mod-clean -im-mlm-clean
 # Execute the `uninstall-mods' target to remove all the installed mods.
 
 
--im-mod-clean: $(mc_jar).bak
+-im-mod-clean:
 	-rd /S /Q extract
 
-# Use $(mc_jar).bak as a prerequisite to restore $(mc_jar).
-
 -im-mod: $(im_mod)
-	-copy extract\*.jar $(mc_dir)\.minecraft\bin > nul
-	cd extract && 7za a $(CURDIR)\$(mc_jar) * -x!*.jar > nul
-	7za d $(mc_jar) META-INF > nul
+	-copy extract\*.jar $(des_dir) > nul
+	cd extract && 7za a $(CURDIR)\$(des_jar) * -x!*.jar > nul
+	7za d $(des_jar) META-INF > nul
 	$(call ok_msg,$@)
 
 # Installation of manual-install mods:
-# - Only .jar files (if any) will be copied to $(mc_dir)\.minecraft\bin.
-# - The others will be added in $(mc_jar).
-# - The `META-INF' folder in $(mc_jar) will be deleted.
+# - Only .jar files (if any) will be copied to $(des_dir).
+# - The others will be added in $(des_jar).
+# - The `META-INF' folder in $(des_jar) will be deleted.
 
 extract:
 	md $@
