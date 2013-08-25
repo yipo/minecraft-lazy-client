@@ -96,7 +96,6 @@ mc_dir = MinecraftLazyClient
 mc_lch = $(mc_dir)\.minecraft\mc-launcher.jar
 mc_bat = $(mc_dir)\Minecraft.bat
 mc_ver = $(mc_dir)\.minecraft\versions
-mc_mod = $(mc_dir)\.minecraft\mods
 
 # Just for shorter names
 
@@ -112,6 +111,16 @@ des_jar = $(des_dir)\$(des).jar
 des_jsn = $(des_dir)\$(des).json
 
 # This script will create a new version $(des) based on $(sou).
+
+mc_mod_ml = $(des_dir)\mods
+mc_mod_fg = $(mc_dir)\.minecraft\mods
+
+mc_mod = $(if $(findstring ModLoader,$(MOD_LIST)),$(mc_mod_ml),$(mc_mod_fg))
+
+# The location of `mods' folder of ModLoader is different from the Forge one.
+# If there is a keyword `ModLoader' in $(MOD_LIST),
+# $(mc_mod) will become `$(des_dir)\mods' automatically.
+# I hope this can be unify in the future.
 
 define \n
 
