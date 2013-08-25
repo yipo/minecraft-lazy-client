@@ -313,9 +313,9 @@ $(OUTPUT_FILE): Packing.list
 	7za a $@ @Packing.list
 
 Packing.list:
-	>  $@ echo $(mc_dir)\.minecraft\bin
-	>> $@ echo $(mc_dir)\.minecraft\mods\*.zip
-	>> $@ echo $(mc_dir)\.minecraft\mods\*.jar
+	>  $@ echo $(des_dir)
+	>> $@ echo $(mc_mod)\*.zip
+	>> $@ echo $(mc_mod)\*.jar
 	>> $@ echo $(mc_lch)
 	>> $@ echo $(mc_bat)
 	$(foreach i,$(PACKING),>> $@ echo $(mc_dir)\$(i)$(\n))
