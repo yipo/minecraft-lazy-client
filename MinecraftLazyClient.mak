@@ -307,12 +307,12 @@ post-processing:
 packing: install-mods post-processing packing-clean $(OUTPUT_FILE)
 
 packing-clean:
-	-del $(OUTPUT_FILE) Packing.list
+	-del $(OUTPUT_FILE) packing-list
 
-$(OUTPUT_FILE): Packing.list
-	7za a $@ @Packing.list
+$(OUTPUT_FILE): packing-list
+	7za a $@ @packing-list
 
-Packing.list:
+packing-list:
 	>  $@ echo $(des_dir)
 	>> $@ echo $(mc_mod)\*.zip
 	>> $@ echo $(mc_mod)\*.jar
