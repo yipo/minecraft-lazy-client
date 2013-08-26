@@ -96,6 +96,7 @@ mc_dir = MinecraftLazyClient
 mc_lch = $(mc_dir)\.minecraft\mc-launcher.jar
 mc_bat = $(mc_dir)\Minecraft.bat
 mc_ver = $(mc_dir)\.minecraft\versions
+mc_pfl = $(mc_dir)\.minecraft\launcher_profiles.json
 
 # Just for shorter names
 
@@ -318,18 +319,41 @@ packing: install-mods post-processing packing-clean $(OUTPUT_FILE)
 packing-clean:
 	-del $(OUTPUT_FILE) packing-list
 
-$(OUTPUT_FILE): packing-list
+$(OUTPUT_FILE): packing-list default-profile
 	7za a $@ @packing-list
 
 packing-list:
 	>  $@ echo $(des_dir)
 	>> $@ echo $(mc_mod)\*.zip
 	>> $@ echo $(mc_mod)\*.jar
+	>> $@ echo $(mc_pfl)
 	>> $@ echo $(mc_lch)
 	>> $@ echo $(mc_bat)
 	$(foreach i,$(PACKING),>> $@ echo $(mc_dir)\$(i)$(\n))
 
 # Actually, only few things are needed to make a package.
+
+define dfpfl_jq
+{
+  profiles: {
+    "(Default)": {
+      name: "(Default)",
+      lastVersionId: "$(des)",
+      javaArgs: ""
+    }
+  },
+  selectedProfile: "(Default)",
+  clientToken,
+  authenticationDatabase: {}
+}
+endef
+
+default-profile: $(mc_pfl)
+	jq "$(subst $(\n),,$(subst ",\",$(dfpfl_jq)))" < $< > $@
+	type $@ > $<
+	del $@
+
+# Remove private information and set the selected version.
 
 
 clean: packing-clean
