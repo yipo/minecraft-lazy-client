@@ -1,5 +1,5 @@
-# Minecraft Lazy Client v1.0
-# (for the launcher of Minecraft version <= 1.5.2)
+# Minecraft Lazy Client
+# (for the launcher of Minecraft version >= 1.6.1)
 # GitHub: https://github.com/yipo/minecraft-lazy-client
 # Author: Yi-Pu Guo (YiPo)
 # License: MIT
@@ -19,6 +19,10 @@ LAUNCHER_JAR ?= minecraft.jar
 
 # The default value is the filename of the .jar official launcher.
 # The .exe version is also OK. However, the .jar version has a smaller size.
+
+BASED_ON_VER ?= 1.6.1
+
+# The version you want to install mods on.
 
 MOD_LIST ?=
 
@@ -57,7 +61,7 @@ PACKING ?=
 
 # - Syntax:
 # PACKING = [$(<predef-const>) ...] [<file-path> ...]
-# <predef-const> = PL_SETT | PL_SERV | PL_SAVE | PL_TXPK
+# <predef-const> = PL_SETT | PL_SERV | PL_SAVE | PL_RSPK
 
 # - Example:
 # PACKING = $(PL_SETT) $(PL_SERV) .minecraft\config\InvTweaks*.txt
@@ -68,12 +72,12 @@ PACKING ?=
 # PL_SETT: the file record the settings.
 # PL_SERV: the file record the server list.
 # PL_SAVE: the `save' folder.
-# PL_TXPK: the `texturepacks' folder.
+# PL_RSPK: the `resourcepacks' folder.
 
 PL_SETT = .minecraft\options.txt
 PL_SERV = .minecraft\servers.dat
 PL_SAVE = .minecraft\saves
-PL_TXPK = .minecraft\texturepacks
+PL_RSPK = .minecraft\resourcepacks
 
 # Note that placing '\' at end of a line means splitting lines.
 
@@ -89,12 +93,35 @@ SHELL = cmd.exe
 VPATH = $(SOURCE_DIR)
 
 mc_dir = MinecraftLazyClient
-mc_lch = $(mc_dir)\.minecraft\launcher.jar
+mc_lch = $(mc_dir)\.minecraft\mc-launcher.jar
 mc_bat = $(mc_dir)\Minecraft.bat
-mc_jar = $(mc_dir)\.minecraft\bin\minecraft.jar
-mc_mod = $(mc_dir)\.minecraft\mods
+mc_ver = $(mc_dir)\.minecraft\versions
+mc_pfl = $(mc_dir)\.minecraft\launcher_profiles.json
 
-# Just for a shorter name
+# Just for shorter names
+
+sou = $(BASED_ON_VER)
+des = $(sou)-mlc
+
+sou_dir = $(mc_ver)\$(sou)
+sou_jar = $(sou_dir)\$(sou).jar
+sou_jsn = $(sou_dir)\$(sou).json
+
+des_dir = $(mc_ver)\$(des)
+des_jar = $(des_dir)\$(des).jar
+des_jsn = $(des_dir)\$(des).json
+
+# This script will create a new version $(des) based on $(sou).
+
+mc_mod_ml = $(des_dir)\mods
+mc_mod_fg = $(mc_dir)\.minecraft\mods
+
+mc_mod = $(if $(findstring ModLoader,$(MOD_LIST)),$(mc_mod_ml),$(mc_mod_fg))
+
+# The location of `mods' folder of ModLoader is different from the Forge one.
+# If there is a keyword `ModLoader' in $(MOD_LIST),
+# $(mc_mod) will become `$(des_dir)\mods' automatically.
+# I hope this can be unify in the future.
 
 define \n
 
@@ -124,7 +151,7 @@ run_mc = $(mc_bat) /WAIT
 # Run Minecraft via $(mc_bat) consistently but wait for termination.
 
 
-initial: $(SOURCE_DIR) tool\7za.exe
+initial: $(SOURCE_DIR) tool\7za.exe tool\jq.exe
 
 $(SOURCE_DIR):
 	md $@
@@ -141,6 +168,13 @@ tool\7za.exe: | tool
 
 # It's wired to use this script without extracting or creating any archive.
 
+tool\jq.exe: | tool
+	@echo ** jq (can be got from: http://stedolan.github.io/jq/) is needed.
+	@echo ** Put the jq.exe in tool\ folder.
+	@exit 1
+
+# The tool to dealing with .json files.
+
 
 portable-basis: initial $(mc_lch) $(mc_bat)
 	$(call ok_msg,$@)
@@ -150,7 +184,7 @@ $(mc_dir):
 $(mc_dir)\.minecraft: | $(mc_dir)
 	md $@
 
-# Hide the launcher.jar in `.minecraft' folder
+# Hide the mc-launcher.jar in `.minecraft' folder
 # so that nobody will execute it directly by mistake (I thought).
 
 $(mc_lch): $(LAUNCHER_JAR) | $(mc_dir)\.minecraft
@@ -162,34 +196,34 @@ $(mc_bat): | $(mc_dir)
 	>  $@ echo @ECHO OFF
 	>> $@ echo SET APPDATA=%%~dp0
 	>> $@ echo CD "%%~dp0\.minecraft"
-	>> $@ echo START %%* javaw $(java_arg) -jar launcher.jar
+	>> $@ echo START %%* javaw $(java_arg) -jar mc-launcher.jar
 
 # Sure, only the first line is beginning with `>'. The others are `>>'.
 # Using %~dp0 so that it doesn't matter where the current directory is.
 # Using %* so that we can add the argument /WAIT to the START command.
 
 
-first-run: $(mc_jar).bak
+first-run: restore
 	$(call ok_msg,$@)
 
 # This step is annoying and wasting time.
 # So once it has been done, it will not update anymore.
 # When update is really needed, just `make clean' and do it all again.
 
-$(mc_jar): | portable-basis
-	@echo ** Please login, take the first run and quit the game manually.
+$(sou_dir): | portable-basis
+	@echo ** Please login, take the first run of the version $(sou)
+	@echo ** and then quit the game manually.
 	$(run_mc)
 
-$(mc_jar).bak: $(mc_jar)
-	$(if $(wildcard $@),                 \
-		@echo ** Restore $(mc_jar).$(\n) \
-		@copy /Y $@ $< > nul$(\n)        \
-		@$(call touch,$@),               \
-		copy $< $@ > nul)
+restore: $(sou_dir) $(if $(wildcard $(des_dir)),$(des_jar) $(des_jsn))
+	@echo ** Restore the version $(des) to a pure one.
+	-md $(des_dir) > nul
+	copy /Y $(sou_jar) $(des_jar) > nul
+	jq ".id = \"$(des)\"" < $(sou_jsn) > $(des_jsn)
+	@echo ** Update the restore timestamp.
+	> $@ echo.
 
-# Backup and restore $(mc_jar):
-# If $(mc_jar).bak does not exist yet, backup $(mc_jar) to $(mc_jar).bak.
-# Otherwise, restore $(mc_jar) from $(mc_jar).bak if $(mc_jar) is newer.
+# The `restore' target restore $(des) to a pure one only if that was modified.
 
 
 PHONY: -im-mod-clean -im-mod -im-mlm-clean -im-mlm
@@ -208,21 +242,19 @@ uninstall-mods: -im-mod-clean -im-mlm-clean
 # Execute the `uninstall-mods' target to remove all the installed mods.
 
 
--im-mod-clean: $(mc_jar).bak
+-im-mod-clean:
 	-rd /S /Q extract
 
-# Use $(mc_jar).bak as a prerequisite to restore $(mc_jar).
-
 -im-mod: $(im_mod)
-	-copy extract\*.jar $(mc_dir)\.minecraft\bin > nul
-	cd extract && 7za a $(CURDIR)\$(mc_jar) * -x!*.jar > nul
-	7za d $(mc_jar) META-INF > nul
+	-copy extract\*.jar $(des_dir) > nul
+	cd extract && 7za a $(CURDIR)\$(des_jar) * -x!*.jar > nul
+	7za d $(des_jar) META-INF > nul
 	$(call ok_msg,$@)
 
 # Installation of manual-install mods:
-# - Only .jar files (if any) will be copied to $(mc_dir)\.minecraft\bin.
-# - The others will be added in $(mc_jar).
-# - The `META-INF' folder in $(mc_jar) will be deleted.
+# - Only .jar files (if any) will be copied to $(des_dir).
+# - The others will be added in $(des_jar).
+# - The `META-INF' folder in $(des_jar) will be deleted.
 
 extract:
 	md $@
@@ -285,24 +317,48 @@ post-processing:
 packing: install-mods post-processing packing-clean $(OUTPUT_FILE)
 
 packing-clean:
-	-del $(OUTPUT_FILE) Packing.list
+	-del $(OUTPUT_FILE) packing-list
 
-$(OUTPUT_FILE): Packing.list
-	7za a $@ @Packing.list
+$(OUTPUT_FILE): packing-list default-profile
+	7za a $@ @packing-list
 
-Packing.list:
-	>  $@ echo $(mc_dir)\.minecraft\bin
-	>> $@ echo $(mc_dir)\.minecraft\mods\*.zip
-	>> $@ echo $(mc_dir)\.minecraft\mods\*.jar
+packing-list:
+	>  $@ echo $(des_dir)
+	>> $@ echo $(mc_mod)\*.zip
+	>> $@ echo $(mc_mod)\*.jar
+	>> $@ echo $(mc_pfl)
 	>> $@ echo $(mc_lch)
 	>> $@ echo $(mc_bat)
 	$(foreach i,$(PACKING),>> $@ echo $(mc_dir)\$(i)$(\n))
 
 # Actually, only few things are needed to make a package.
 
+define dfpfl_jq
+{
+  profiles: {
+    "(Default)": {
+      name: "(Default)",
+      lastVersionId: "$(des)",
+      javaArgs: ""
+    }
+  },
+  selectedProfile: "(Default)",
+  clientToken,
+  authenticationDatabase: {}
+}
+endef
+
+default-profile: $(mc_pfl)
+	jq "$(subst $(\n),,$(subst ",\",$(dfpfl_jq)))" < $< > $@
+	type $@ > $<
+	del $@
+
+# Remove private information and set the selected version.
+
 
 clean: packing-clean
 	-rd /S /Q $(mc_dir) extract
+	-del restore
 
 super-clean: clean
 	-rd /S /Q tool $(SOURCE_DIR)
