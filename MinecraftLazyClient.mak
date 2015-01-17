@@ -320,7 +320,9 @@ packing-clean:
 	-del $(OUTPUT_FILE) packing-list
 
 $(OUTPUT_FILE): packing-list default-profile
-	7za a $@ @packing-list
+	-7za a $@ @packing-list
+
+# Ignore file-not-found warnings by adding the leading hyphen.
 
 packing-list:
 	>  $@ echo $(des_dir)
@@ -354,6 +356,11 @@ default-profile: $(mc_pfl)
 	del $@
 
 # Remove private information and set the selected version.
+
+$(mc_pfl):
+	> $@ echo.
+
+# Create a dummy file, if $(mc_pfl) does not exist.
 
 
 clean: packing-clean
