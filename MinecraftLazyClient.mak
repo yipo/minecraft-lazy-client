@@ -95,13 +95,17 @@ VPATH = $(SOURCE_DIR)
 mc_dir = MinecraftLazyClient
 mc_lch = $(mc_dir)\.minecraft\mc-launcher.jar
 mc_bat = $(mc_dir)\Minecraft.bat
+mc_lib = $(mc_dir)\.minecraft\libraries
 mc_ver = $(mc_dir)\.minecraft\versions
 mc_pfl = $(mc_dir)\.minecraft\launcher_profiles.json
 
 # Just for shorter names
 
+ori = $(firstword $(subst -, ,$(BASED_ON_VER)))
 sou = $(BASED_ON_VER)
-des = $(sou)-mlc
+des = $(ori)-mlc
+
+ori_dir = $(mc_ver)\$(ori)
 
 sou_dir = $(mc_ver)\$(sou)
 sou_jar = $(sou_dir)\$(sou).jar
@@ -122,6 +126,8 @@ mc_mod = $(if $(findstring ModLoader,$(MOD_LIST)),$(mc_mod_ml),$(mc_mod_fg))
 # If there is a keyword `ModLoader' in $(MOD_LIST),
 # $(mc_mod) will become `$(des_dir)\mods' automatically.
 # I hope this can be unify in the future.
+
+mc_lib_fg = $(mc_lib)\net\minecraftforge
 
 define \n
 
@@ -210,10 +216,19 @@ first-run: restore
 # So once it has been done, it will not update anymore.
 # When update is really needed, just `make clean' and do it all again.
 
-$(sou_dir): | portable-basis
-	@echo ** Please login, take the first run of the version $(sou)
+$(ori_dir): | portable-basis
+	@echo ** Please login, take the first run of the version $(ori)
 	@echo ** and then quit the game manually.
 	$(run_mc)
+
+$(mc_lib_fg): $(ori_dir) | $(SOURCE_DIR)/forge-*-*-installer.jar
+	@echo ** Please install Forge.
+	set APPDATA=$(mc_dir)&& javaw -jar $(lastword $|)
+
+# Note that `&&' must right behind the $(mc_dir), or
+# any space will cause the value of APPDATA wrong.
+
+$(sou_dir): $(if $(findstring Forge,$(sou)),$(mc_lib_fg))
 
 restore: $(sou_dir) $(if $(wildcard $(des_dir)),$(des_jar) $(des_jsn))
 	@echo ** Restore the version $(des) to a pure one.
