@@ -151,11 +151,6 @@ touch = copy /B $1+,, $1 > nul
 
 ok_msg = @echo [$1] OK
 
-java_arg = -Xms512M -Xmx1024M
-
-# The arguments for `java' command used by the whole script.
-# The setting `-Xms512M -Xmx1024M' should be a good choice.
-
 run_mc = $(mc_bat) /WAIT
 
 # Run Minecraft via $(mc_bat) consistently but wait for termination.
@@ -206,7 +201,7 @@ $(mc_bat): | $(mc_dir)
 	>  $@ echo @ECHO OFF
 	>> $@ echo SET APPDATA=%%~dp0
 	>> $@ echo CD "%%~dp0\.minecraft"
-	>> $@ echo START %%* javaw $(java_arg) -jar mc-launcher.jar
+	>> $@ echo START %%* javaw -jar mc-launcher.jar
 
 # Sure, only the first line is beginning with `>'. The others are `>>'.
 # Using %~dp0 so that it doesn't matter where the current directory is.
