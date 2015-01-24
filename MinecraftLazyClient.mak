@@ -339,6 +339,12 @@ $(OUTPUT_FILE): packing-list default-profile
 
 # Ignore file-not-found warnings by adding the leading hyphen.
 
+ifneq ($(findstring Forge,$(sou)),)
+PACKING += .minecraft\libraries\net\minecraftforge
+PACKING += .minecraft\libraries\org\scala-lang
+PACKING += .minecraft\libraries\com\typesafe
+endif
+
 packing-list:
 	>  $@ echo $(des_dir)
 	>> $@ echo $(mc_mod)\*.zip
