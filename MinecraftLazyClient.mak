@@ -81,6 +81,10 @@ PL_RSPK = .minecraft\resourcepacks
 
 # Note that placing '\' at end of a line means splitting lines.
 
+JAVA_ARGS ?=
+
+# To set `JVM Arguments' in the profile editor.
+
 
 PHONY: initial portable-basis first-run install-mods post-processing packing
 PHONY: uninstall-mods packing-clean clean
@@ -343,6 +347,8 @@ ifneq ($(findstring Forge,$(sou)),)
 PACKING += .minecraft\libraries\net\minecraftforge
 PACKING += .minecraft\libraries\org\scala-lang
 PACKING += .minecraft\libraries\com\typesafe
+JAVA_ARGS += -Dfml.ignoreInvalidMinecraftCertificates=true
+JAVA_ARGS += -Dfml.ignorePatchDiscrepancies=true
 endif
 
 packing-list:
@@ -362,7 +368,7 @@ define dfpfl_jq
     "(Default)": {
       name: "(Default)",
       lastVersionId: "$(des)",
-      javaArgs: ""
+      javaArgs: "$(JAVA_ARGS)"
     }
   },
   selectedProfile: "(Default)",
