@@ -86,8 +86,8 @@ JAVA_ARGS ?=
 # To set `JVM Arguments' in the profile editor.
 
 
-PHONY: initial portable-basis first-run install-mods post-processing packing
-PHONY: uninstall-mods packing-clean clean
+.PHONY: initial portable-basis first-run install-mods post-processing packing
+.PHONY: uninstall-mods packing-clean clean
 
 .SUFFIXES:
 .SUFFIXES: %.mod %.mlm
@@ -240,7 +240,7 @@ restore: $(sou_dir) $(if $(wildcard $(des_dir)),$(des_jar) $(des_jsn))
 # The `restore' target restore $(des) to a pure one only if that was modified.
 
 
-PHONY: -im-mod-clean -im-mod -im-mlm-clean -im-mlm
+.PHONY: -im-mod-clean -im-mod -im-mlm-clean -im-mlm
 
 # It's not recommended to execute these targets directly.
 
