@@ -81,6 +81,10 @@ PL_RSPK = .minecraft\resourcepacks
 
 # Note that placing '\' at end of a line means splitting lines.
 
+JAVA_ARGS ?=
+
+# To set `JVM Arguments' in the profile editor.
+
 
 PHONY: initial portable-basis first-run install-mods post-processing packing
 PHONY: uninstall-mods packing-clean clean
@@ -95,13 +99,17 @@ VPATH = $(SOURCE_DIR)
 mc_dir = MinecraftLazyClient
 mc_lch = $(mc_dir)\.minecraft\mc-launcher.jar
 mc_bat = $(mc_dir)\Minecraft.bat
+mc_lib = $(mc_dir)\.minecraft\libraries
 mc_ver = $(mc_dir)\.minecraft\versions
 mc_pfl = $(mc_dir)\.minecraft\launcher_profiles.json
 
 # Just for shorter names
 
+ori = $(firstword $(subst -, ,$(BASED_ON_VER)))
 sou = $(BASED_ON_VER)
-des = $(sou)-mlc
+des = $(ori)-mlc
+
+ori_dir = $(mc_ver)\$(ori)
 
 sou_dir = $(mc_ver)\$(sou)
 sou_jar = $(sou_dir)\$(sou).jar
@@ -123,6 +131,8 @@ mc_mod = $(if $(findstring ModLoader,$(MOD_LIST)),$(mc_mod_ml),$(mc_mod_fg))
 # $(mc_mod) will become `$(des_dir)\mods' automatically.
 # I hope this can be unify in the future.
 
+mc_lib_fg = $(mc_lib)\net\minecraftforge
+
 define \n
 
 
@@ -140,11 +150,6 @@ touch = copy /B $1+,, $1 > nul
 # Reference: http://technet.microsoft.com/en-us/library/bb490886
 
 ok_msg = @echo [$1] OK
-
-java_arg = -Xms512M -Xmx1024M
-
-# The arguments for `java' command used by the whole script.
-# The setting `-Xms512M -Xmx1024M' should be a good choice.
 
 run_mc = $(mc_bat) /WAIT
 
@@ -196,7 +201,7 @@ $(mc_bat): | $(mc_dir)
 	>  $@ echo @ECHO OFF
 	>> $@ echo SET APPDATA=%%~dp0
 	>> $@ echo CD "%%~dp0\.minecraft"
-	>> $@ echo START %%* javaw $(java_arg) -jar mc-launcher.jar
+	>> $@ echo START %%* javaw -jar mc-launcher.jar
 
 # Sure, only the first line is beginning with `>'. The others are `>>'.
 # Using %~dp0 so that it doesn't matter where the current directory is.
@@ -210,10 +215,19 @@ first-run: restore
 # So once it has been done, it will not update anymore.
 # When update is really needed, just `make clean' and do it all again.
 
-$(sou_dir): | portable-basis
-	@echo ** Please login, take the first run of the version $(sou)
+$(ori_dir): | portable-basis
+	@echo ** Please login, take the first run of the version $(ori)
 	@echo ** and then quit the game manually.
 	$(run_mc)
+
+$(mc_lib_fg): $(ori_dir) | $(SOURCE_DIR)/forge-*-*-installer.jar
+	@echo ** Please install Forge.
+	set APPDATA=$(mc_dir)&& javaw -jar $(lastword $|)
+
+# Note that `&&' must right behind the $(mc_dir), or
+# any space will cause the value of APPDATA wrong.
+
+$(sou_dir): $(if $(findstring Forge,$(sou)),$(mc_lib_fg))
 
 restore: $(sou_dir) $(if $(wildcard $(des_dir)),$(des_jar) $(des_jsn))
 	@echo ** Restore the version $(des) to a pure one.
@@ -324,6 +338,14 @@ $(OUTPUT_FILE): packing-list default-profile
 
 # Ignore file-not-found warnings by adding the leading hyphen.
 
+ifneq ($(findstring Forge,$(sou)),)
+PACKING += .minecraft\libraries\net\minecraftforge
+PACKING += .minecraft\libraries\org\scala-lang
+PACKING += .minecraft\libraries\com\typesafe
+JAVA_ARGS += -Dfml.ignoreInvalidMinecraftCertificates=true
+JAVA_ARGS += -Dfml.ignorePatchDiscrepancies=true
+endif
+
 packing-list:
 	>  $@ echo $(des_dir)
 	>> $@ echo $(mc_mod)\*.zip
@@ -341,7 +363,7 @@ define dfpfl_jq
     "(Default)": {
       name: "(Default)",
       lastVersionId: "$(des)",
-      javaArgs: ""
+      javaArgs: "$(JAVA_ARGS)"
     }
   },
   selectedProfile: "(Default)",
