@@ -87,7 +87,7 @@ JAVA_ARGS ?=
 
 
 .PHONY: initial portable-basis first-run install-mods post-processing packing
-.PHONY: uninstall-mods packing-clean clean
+.PHONY: uninstall-mods packing-clean clean super-clean
 
 .SUFFIXES:
 .SUFFIXES: %.mod %.mlm
@@ -157,6 +157,7 @@ run_mc = $(mc_bat) /WAIT
 
 
 initial: $(SOURCE_DIR) tool\7za.exe tool\jq.exe
+	$(call ok_msg,$@)
 
 $(SOURCE_DIR):
 	md $@
@@ -208,7 +209,7 @@ $(mc_bat): | $(mc_dir)
 # Using %* so that we can add the argument /WAIT to the START command.
 
 
-first-run: restore
+first-run: portable-basis restore
 	$(call ok_msg,$@)
 
 # This step is annoying and wasting time.
@@ -240,6 +241,9 @@ restore: $(sou_dir) $(if $(wildcard $(des_dir)),$(des_jar) $(des_jsn))
 # The `restore' target restore $(des) to a pure one only if that was modified.
 
 
+install-mods uninstall-mods: $(if $(MOD_LIST),first-run,portable-basis)
+	$(call ok_msg,$@)
+
 .PHONY: -im-mod-clean -im-mod -im-mlm-clean -im-mlm
 
 # It's not recommended to execute these targets directly.
@@ -247,7 +251,6 @@ restore: $(sou_dir) $(if $(wildcard $(des_dir)),$(des_jar) $(des_jsn))
 im_mod = $(filter %.mod,$(MOD_LIST))
 im_mlm = $(filter %.mlm,$(MOD_LIST))
 
-install-mods: portable-basis $(if $(MOD_LIST),first-run)
 install-mods: $(if $(im_mod),-im-mod-clean -im-mod)
 install-mods: $(if $(im_mlm),-im-mlm-clean -im-mlm)
 
@@ -329,6 +332,7 @@ post-processing:
 
 
 packing: install-mods post-processing packing-clean $(OUTPUT_FILE)
+	$(call ok_msg,$@)
 
 packing-clean:
 	-del $(OUTPUT_FILE) packing-list
