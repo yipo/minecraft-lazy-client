@@ -97,29 +97,15 @@ SHELL = cmd.exe
 VPATH = $(SOURCE_DIR)
 
 mc_dir = MinecraftLazyClient
-mc_lch = $(mc_dir)\.minecraft\mc-launcher.jar
 mc_bat = $(mc_dir)\Minecraft.bat
+mc_lch = $(mc_dir)\.minecraft\mc-launcher.jar
+mc_pfl = $(mc_dir)\.minecraft\launcher_profiles.json
 mc_lib = $(mc_dir)\.minecraft\libraries
 mc_ver = $(mc_dir)\.minecraft\versions
-mc_pfl = $(mc_dir)\.minecraft\launcher_profiles.json
 
 # Just for shorter names
 
-ori = $(firstword $(subst -, ,$(BASED_ON_VER)))
-sou = $(BASED_ON_VER)
-des = $(ori)-mlc
-
-ori_dir = $(mc_ver)\$(ori)
-
-sou_dir = $(mc_ver)\$(sou)
-sou_jar = $(sou_dir)\$(sou).jar
-sou_jsn = $(sou_dir)\$(sou).json
-
-des_dir = $(mc_ver)\$(des)
-des_jar = $(des_dir)\$(des).jar
-des_jsn = $(des_dir)\$(des).json
-
-# This script will create a new version $(des) based on $(sou).
+mc_lib_fg = $(mc_lib)\net\minecraftforge
 
 mc_mod_ml = $(des_dir)\mods
 mc_mod_fg = $(mc_dir)\.minecraft\mods
@@ -131,7 +117,20 @@ mc_mod = $(if $(findstring ModLoader,$(MOD_LIST)),$(mc_mod_ml),$(mc_mod_fg))
 # $(mc_mod) will become `$(des_dir)\mods' automatically.
 # I hope this can be unify in the future.
 
-mc_lib_fg = $(mc_lib)\net\minecraftforge
+ori = $(firstword $(subst -, ,$(BASED_ON_VER)))
+sou = $(BASED_ON_VER)
+des = $(ori)-mlc
+
+ori_dir = $(mc_ver)\$(ori)
+sou_dir = $(mc_ver)\$(sou)
+des_dir = $(mc_ver)\$(des)
+
+sou_jar = $(sou_dir)\$(sou).jar
+sou_jsn = $(sou_dir)\$(sou).json
+des_jar = $(des_dir)\$(des).jar
+des_jsn = $(des_dir)\$(des).json
+
+# This script will create a new version $(des) based on $(sou).
 
 define \n
 
@@ -143,11 +142,6 @@ endef
 fix_path = $(subst /,\,$1)
 
 # The function that convert a path in Unix style to the one in Windows style.
-
-touch = copy /B $1+,, $1 > nul
-
-# The command that change the date and time of a file as `touch' on Unix.
-# Reference: http://technet.microsoft.com/en-us/library/bb490886
 
 ok_msg = @echo [$1] OK
 
