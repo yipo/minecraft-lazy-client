@@ -102,15 +102,16 @@ mc_lch = $(mc_dir)\.minecraft\mc-launcher.jar
 mc_pfl = $(mc_dir)\.minecraft\launcher_profiles.json
 mc_lib = $(mc_dir)\.minecraft\libraries
 mc_ver = $(mc_dir)\.minecraft\versions
+mc_mod = $(if $(forge),$(mc_mod_fg),$(mc_mod_ml))
 
 # Just for shorter names
 
+forge = $(findstring Forge,$(BASED_ON_VER))
+
 mc_lib_fg = $(mc_lib)\net\minecraftforge
 
-mc_mod_ml = $(des_dir)\mods
 mc_mod_fg = $(mc_dir)\.minecraft\mods
-
-mc_mod = $(if $(findstring ModLoader,$(MOD_LIST)),$(mc_mod_ml),$(mc_mod_fg))
+mc_mod_ml = $(des_dir)\mods
 
 # The location of `mods' folder of ModLoader is different from the Forge one.
 # If there is a keyword `ModLoader' in $(MOD_LIST),
@@ -222,7 +223,7 @@ $(mc_lib_fg): $(ori_dir) | $(SOURCE_DIR)/forge-*-*-installer.jar
 # Note that `&&' must right behind the $(mc_dir), or
 # any space will cause the value of APPDATA wrong.
 
-$(sou_dir): $(if $(findstring Forge,$(sou)),$(mc_lib_fg))
+$(sou_dir): $(if $(forge),$(mc_lib_fg))
 
 restore: $(sou_dir) $(if $(wildcard $(des_dir)),$(des_jar) $(des_jsn))
 	@echo ** Restore the version $(des) to a pure one.
@@ -336,7 +337,7 @@ $(OUTPUT_FILE): packing-list default-profile
 
 # Ignore file-not-found warnings by adding the leading hyphen.
 
-ifneq ($(findstring Forge,$(sou)),)
+ifneq ($(forge),)
 PACKING += .minecraft\libraries\net\minecraftforge
 PACKING += .minecraft\libraries\org\scala-lang
 PACKING += .minecraft\libraries\com\typesafe
