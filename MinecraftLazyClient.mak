@@ -319,7 +319,7 @@ auto_match = $1: $(lastword $(wildcard $(call auto_match_pattern,$1)))
 $(foreach i,$(MOD_LIST),$(eval $(call auto_match,$(i))))
 
 
-post-processing:
+post-processing: install-mods
 
 # Users can do something before packing.
 # Note that don't let this target become the default target.
