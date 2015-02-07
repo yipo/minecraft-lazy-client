@@ -38,10 +38,10 @@ MOD_LIST ?=
 # `first-run' will not be executed and just a portable Minecraft will you get.
 
 # ** mod-name: the name of the mod.
-# By default, this script will find the `*<mod-name>*.zip' for installation.
+# By default, this script matches `*<mod-name>*.jar' (or .zip) for installation.
 # Ex: `ReiMinimap.mlm' can match the file `[1.3.1]ReiMinimap_v3.2_05.zip'.
 
-# If multiple .zip file are matched, the last one in alphabetical order
+# If multiple files are matched, the last one in alphabetical order
 # (usually the newest one in version) will be chosen.
 
 # If no file is matched or the file matched is not you want,
@@ -50,7 +50,7 @@ MOD_LIST ?=
 
 # ** method: the way to install the mod.
 # mod: for normal mods (add the .class files in `bin\minecraft.jar').
-# mlm: for mods require ModLoader (copy the .zip file to the `mods' folder).
+# mlm: for mods require ModLoader (copy the .jar/.zip file to `mods\').
 
 OUTPUT_FILE ?= MinecraftLazyClient.7z
 
@@ -297,7 +297,7 @@ $(im_mlm): | $(mc_mod)
 	copy $(call fix_path,$<) $(mc_mod) > nul
 
 # Installation of the mods require ModLoader:
-# Simply copy the .zip file to $(mc_mod).
+# Simply copy the .jar/.zip file to $(mc_mod).
 
 # Make sure ModLoader is also installed if there are mods depend on it.
 # This script will not check this for you.
@@ -305,7 +305,8 @@ $(im_mlm): | $(mc_mod)
 
 auto_match_pattern = $(SOURCE_DIR)/*$(basename $(notdir $1))*.*
 
-# Find the `*<mod-name>*.zip' file in $(SOURCE_DIR) folder.
+# Find the `*<mod-name>*.jar' (or .zip) file in $(SOURCE_DIR) folder.
+# `.*' because makefile does not support regular expression like `.(jar|zip)'.
 
 auto_match = $1: $(lastword $(wildcard $(call auto_match_pattern,$1)))
 
@@ -347,8 +348,8 @@ endif
 
 packing-list:
 	>  $@ echo $(des_dir)
-	>> $@ echo $(mc_mod)\*.zip
 	>> $@ echo $(mc_mod)\*.jar
+	>> $@ echo $(mc_mod)\*.zip
 	>> $@ echo $(mc_pfl)
 	>> $@ echo $(mc_lch)
 	>> $@ echo $(mc_bat)
