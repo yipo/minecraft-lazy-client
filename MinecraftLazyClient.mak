@@ -152,27 +152,16 @@ run_mc = $(mc_bat) /WAIT
 initial: $(SOURCE_DIR) tool\7za.exe tool\jq.exe
 	$(call ok_msg,$@)
 
-$(SOURCE_DIR):
+$(SOURCE_DIR) tool:
 	md $@
 
-# This will create a $(SOURCE_DIR) folder if there is no one yet.
-
-tool:
-	md $@
-
-tool\7za.exe: | tool
-	@echo ** 7za (can be got from: http://www.7-zip.org/) is needed.
-	@echo ** Put the 7za.exe in tool\ folder.
+tool\7za.exe tool\jq.exe: | tool
+	@echo ** Please download $(notdir $@) from $(link_$(basename $(notdir $@))),
+	@echo ** and place it in the tool folder.
 	@exit 1
 
-# It's wired to use this script without extracting or creating any archive.
-
-tool\jq.exe: | tool
-	@echo ** jq (can be got from: http://stedolan.github.io/jq/) is needed.
-	@echo ** Put the jq.exe in tool\ folder.
-	@exit 1
-
-# The tool to dealing with .json files.
+link_7za = http://www.7-zip.org/
+link_jq  = http://stedolan.github.io/jq/
 
 
 portable-basis: initial $(mc_lch) $(mc_bat)
