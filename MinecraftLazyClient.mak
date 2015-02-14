@@ -1,5 +1,6 @@
-# Minecraft Lazy Client
-# (for the launcher of Minecraft version >= 1.6.1)
+# Minecraft Lazy Client v2.0
+# (for the new launcher of Minecraft version >= 1.6.1)
+
 # GitHub: https://github.com/yipo/minecraft-lazy-client
 # Author: Yi-Pu Guo (YiPo)
 # License: MIT
@@ -7,22 +8,23 @@
 
 packing:
 
-# If no specified, the default target is `packing'.
+# The action target is `packing' by default.
 
 
 SOURCE_DIR ?= source
 
-# The place to put all materials (.jar or .zip) in.
-# It works if you put materials in .\, but it's not recommended.
+# Where the script to retrieve required materials.
 
 LAUNCHER_JAR ?= minecraft.jar
 
-# The default value is the filename of the .jar official launcher.
-# The .exe version is also OK. However, the .jar version has a smaller size.
+# The filename of the launcher, is the official jar executable by default.
+# The .exe one is capable, but larger in file size.
 
 BASED_ON_VER ?= 1.6.1
 
-# The version you want to install mods on.
+# The version to install mods on,
+# or the name of the corresponding folder in `.minecraft\versions\'.
+# To install Forge, it should be in the form like `1.7.10-Forge10.13.2.1230'.
 
 MOD_LIST ?=
 
@@ -34,28 +36,29 @@ MOD_LIST ?=
 # - Example:
 # MOD_LIST = ModLoader.mod OptiFine.mod InvTweaks.mlm ReiMinimap.mlm
 
-# If MOD_LIST is empty, no mod will be installed,
-# `first-run' will not be executed and just a portable Minecraft will you get.
+# If MOD_LIST is empty, `first-run' will be skipped,
+# and just a pure, portable Minecraft package is generated.
 
 # ** mod-name: the name of the mod.
-# By default, this script matches `*<mod-name>*.jar' (or .zip) for installation.
-# Ex: `ReiMinimap.mlm' can match the file `[1.3.1]ReiMinimap_v3.2_05.zip'.
+# To install the specified mod, the script automatically searches for
+# the filename matches the patten `*<mod-name>*.jar' (or .zip) in $(SOURCE_DIR).
+# Example: `ReiMinimap.mlm' can match `[1.6.4]ReiMinimap_v3.4_01.zip'.
 
 # If multiple files are matched, the last one in alphabetical order
-# (usually the newest one in version) will be chosen.
+# (usually the newest one in version) will be picked.
 
-# If no file is matched or the file matched is not you want,
-# write a rule to specify the file name.
-# Ex: ReiMinimap.mlm: TheFileYouWant.zip
+# Instead of auto search, write a rule to explicitly specify the filename.
+# Example:
+# OptiFine.mod: OptiFine_1.8.1_HD_U_C7.jar
 
 # ** method: the way to install the mod.
-# mod: for normal mods (add the .class files in `bin\minecraft.jar').
-# mlm: for mods require ModLoader (copy the .jar/.zip file to `mods\').
+# mod: traditional mods (add .class files into the .jar file in `versions\').
+# mlm: Forge/ModLoader mods (copy the .jar/.zip file to `mods\').
 
 OUTPUT_FILE ?= MinecraftLazyClient.7z
 
-# The name of the output file.
-# Note that the filename extension will affect the way 7za compresses the file.
+# The filename of the output package.
+# Note that the filename extension decides the compression method.
 
 PACKING ?=
 
@@ -66,20 +69,20 @@ PACKING ?=
 # - Example:
 # PACKING = $(PL_SETT) $(PL_SERV) .minecraft\config\InvTweaks*.txt
 
-# The additional files or folders you want to add in the package.
-# Specify the path related to $(mc_dir). The constants below can also be used:
+# To add additional files or folders into the package,
+# specify the path related to $(mc_dir), or the constants as follows.
 
-# PL_SETT: the file record the settings.
-# PL_SERV: the file record the server list.
-# PL_SAVE: the `save' folder.
-# PL_RSPK: the `resourcepacks' folder.
+# PL_SETT: the minecraft settings.
+# PL_SERV: the server list.
+# PL_SAVE: the `save\' folder.
+# PL_RSPK: the `resourcepacks\' folder.
 
 PL_SETT = .minecraft\options.txt
 PL_SERV = .minecraft\servers.dat
 PL_SAVE = .minecraft\saves
 PL_RSPK = .minecraft\resourcepacks
 
-# Note that placing '\' at end of a line means splitting lines.
+# Note that a '\' at the end of a line means splitting lines in makefile.
 
 JAVA_ARGS ?=
 
@@ -104,7 +107,7 @@ mc_lib = $(mc_dir)\.minecraft\libraries
 mc_ver = $(mc_dir)\.minecraft\versions
 mc_mod = $(if $(forge),$(mc_mod_fg),$(mc_mod_ml))
 
-# Just for shorter names
+# For shorter names.
 
 forge = $(findstring Forge,$(BASED_ON_VER))
 
@@ -113,10 +116,7 @@ mc_lib_fg = $(mc_lib)\net\minecraftforge
 mc_mod_fg = $(mc_dir)\.minecraft\mods
 mc_mod_ml = $(des_dir)\mods
 
-# The location of `mods' folder of ModLoader is different from the Forge one.
-# If there is a keyword `ModLoader' in $(MOD_LIST),
-# $(mc_mod) will become `$(des_dir)\mods' automatically.
-# I hope this can be unify in the future.
+# Note that Forge and ModLoader have different paths to `mods\'.
 
 ori = $(firstword $(subst -, ,$(BASED_ON_VER)))
 sou = $(BASED_ON_VER)
@@ -131,8 +131,6 @@ sou_jsn = $(sou_dir)\$(sou).json
 des_jar = $(des_dir)\$(des).jar
 des_jsn = $(des_dir)\$(des).json
 
-# This script will create a new version $(des) based on $(sou).
-
 define \n
 
 
@@ -142,13 +140,13 @@ endef
 
 fix_path = $(subst /,\,$1)
 
-# The function that convert a path in Unix style to the one in Windows style.
+# Convert the path from Unix style to Windows style.
 
 ok_msg = @echo [$1] OK
 
 run_mc = $(mc_bat) /WAIT
 
-# Run Minecraft via $(mc_bat) consistently but wait for termination.
+# Run Minecraft by the same way $(mc_bat) does, but wait for termination.
 
 
 initial: $(SOURCE_DIR) tool\7za.exe tool\jq.exe
