@@ -164,31 +164,28 @@ link_7za = http://www.7-zip.org/
 link_jq  = http://stedolan.github.io/jq/
 
 
-portable-basis: initial $(mc_lch) $(mc_bat)
+portable-basis: initial $(mc_bat) $(mc_lch)
 	$(call ok_msg,$@)
 
-$(mc_dir):
+$(mc_bat) $(mc_dir)\.minecraft: | $(mc_dir)
+$(mc_lch): | $(mc_dir)\.minecraft
+
+# To avoid being directly executed (not portable),
+# the launcher is hidden in `.minecraft\'.
+
+$(mc_dir) $(mc_dir)\.minecraft:
 	md $@
-$(mc_dir)\.minecraft: | $(mc_dir)
-	md $@
 
-# Hide the mc-launcher.jar in `.minecraft' folder
-# so that nobody will execute it directly by mistake (I thought).
-
-$(mc_lch): $(LAUNCHER_JAR) | $(mc_dir)\.minecraft
-	copy /Y $(call fix_path,$<) $@ > nul
-
-# Update when there is a newer $(LAUNCHER_JAR).
-
-$(mc_bat): | $(mc_dir)
+$(mc_bat):
 	>  $@ echo @ECHO OFF
 	>> $@ echo SET APPDATA=%%~dp0
 	>> $@ echo CD "%%~dp0\.minecraft"
 	>> $@ echo START %%* javaw -jar mc-launcher.jar
 
-# Sure, only the first line is beginning with `>'. The others are `>>'.
-# Using %~dp0 so that it doesn't matter where the current directory is.
-# Using %* so that we can add the argument /WAIT to the START command.
+# %* is for the /WAIT flag in $(run_mc).
+
+$(mc_lch): $(LAUNCHER_JAR)
+	copy /Y $(call fix_path,$<) $@ > nul
 
 
 first-run: portable-basis restore
