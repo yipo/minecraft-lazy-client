@@ -126,10 +126,14 @@ ori_dir = $(mc_ver)\$(ori)
 sou_dir = $(mc_ver)\$(sou)
 des_dir = $(mc_ver)\$(des)
 
+ori_jar = $(ori_dir)\$(ori).jar
 sou_jar = $(sou_dir)\$(sou).jar
 sou_jsn = $(sou_dir)\$(sou).json
 des_jar = $(des_dir)\$(des).jar
 des_jsn = $(des_dir)\$(des).json
+
+im_mod = $(filter %.mod,$(MOD_LIST))
+im_mlm = $(filter %.mlm,$(MOD_LIST))
 
 define \n
 
@@ -209,15 +213,26 @@ $(mc_lib_fg): $(ori_dir) | $(SOURCE_DIR)/forge-*-*-installer.jar
 
 $(sou_dir): $(if $(forge),$(mc_lib_fg))
 
-restore: $(sou_dir) $(if $(wildcard $(des_dir)),$(des_jar) $(des_jsn))
-	@echo ** Restore the version $(des) to a pure one.
-	-md $(des_dir) > nul
-	copy /Y $(sou_jar) $(des_jar) > nul
-	jq ".id = \"$(des)\"" < $(sou_jsn) > $(des_jsn)
-	@echo ** Update the restore timestamp.
+.PHONY: restore
+
+restore: $(sou_dir) $(if $(im_mod),restore-jar) restore-jsn
+
+rsjsn_jq = .id = \"$(des)\" $(if $(im_mod),| del(.inheritsFrom))
+
+restore-jar restore-jsn: | $(des_dir)
+
+$(des_dir):
+	md $@
+
+restore-jar: $(wildcard $(des_jar))
+	copy /Y $(sou_jar) $(des_jar) || copy /Y $(ori_jar) $(des_jar)
 	> $@ echo.
 
-# The `restore' target restore $(des) to a pure one only if that was modified.
+restore-jsn: $(wildcard $(des_jsn)) Makefile
+	jq "$(rsjsn_jq)" < $(sou_jsn) > $(des_jsn)
+	> $@ echo.
+
+# `restore-*' targets restore $(des_*) only when they were modified.
 
 
 install-mods uninstall-mods: $(if $(MOD_LIST),first-run,portable-basis)
@@ -226,9 +241,6 @@ install-mods uninstall-mods: $(if $(MOD_LIST),first-run,portable-basis)
 .PHONY: -im-mod-clean -im-mod -im-mlm-clean -im-mlm
 
 # It's not recommended to execute these targets directly.
-
-im_mod = $(filter %.mod,$(MOD_LIST))
-im_mlm = $(filter %.mlm,$(MOD_LIST))
 
 install-mods: $(if $(im_mod),-im-mod-clean -im-mod)
 install-mods: $(if $(im_mlm),-im-mlm-clean -im-mlm)
@@ -371,7 +383,7 @@ $(mc_pfl):
 
 clean: packing-clean
 	-rd /S /Q $(mc_dir) extract
-	-del restore
+	-del restore-jar restore-jsn
 
 super-clean: clean
 	-rd /S /Q tool $(SOURCE_DIR)

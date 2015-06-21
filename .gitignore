@@ -3,5 +3,6 @@ source/
 MinecraftLazyClient/
 extract/
 /*.7z
+/restore-jar
+/restore-jsn
 /packing-list
-/restore
