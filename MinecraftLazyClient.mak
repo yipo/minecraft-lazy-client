@@ -1,4 +1,4 @@
-# Minecraft Lazy Client v2.0
+# Minecraft Lazy Client v2.1
 # (for the new launcher of Minecraft version >= 1.6.1)
 
 # GitHub: https://github.com/yipo/minecraft-lazy-client
@@ -126,10 +126,14 @@ ori_dir = $(mc_ver)\$(ori)
 sou_dir = $(mc_ver)\$(sou)
 des_dir = $(mc_ver)\$(des)
 
+ori_jar = $(ori_dir)\$(ori).jar
 sou_jar = $(sou_dir)\$(sou).jar
 sou_jsn = $(sou_dir)\$(sou).json
 des_jar = $(des_dir)\$(des).jar
 des_jsn = $(des_dir)\$(des).json
+
+im_mod = $(filter %.mod,$(MOD_LIST))
+im_mlm = $(filter %.mlm,$(MOD_LIST))
 
 define \n
 
@@ -152,54 +156,40 @@ run_mc = $(mc_bat) /WAIT
 initial: $(SOURCE_DIR) tool\7za.exe tool\jq.exe
 	$(call ok_msg,$@)
 
-$(SOURCE_DIR):
+$(SOURCE_DIR) tool:
 	md $@
 
-# This will create a $(SOURCE_DIR) folder if there is no one yet.
-
-tool:
-	md $@
-
-tool\7za.exe: | tool
-	@echo ** 7za (can be got from: http://www.7-zip.org/) is needed.
-	@echo ** Put the 7za.exe in tool\ folder.
+tool\7za.exe tool\jq.exe: | tool
+	@echo ** Please download $(notdir $@) from $(link_$(basename $(notdir $@))),
+	@echo ** and place it in the tool folder.
 	@exit 1
 
-# It's wired to use this script without extracting or creating any archive.
-
-tool\jq.exe: | tool
-	@echo ** jq (can be got from: http://stedolan.github.io/jq/) is needed.
-	@echo ** Put the jq.exe in tool\ folder.
-	@exit 1
-
-# The tool to dealing with .json files.
+link_7za = http://www.7-zip.org/
+link_jq  = http://stedolan.github.io/jq/
 
 
-portable-basis: initial $(mc_lch) $(mc_bat)
+portable-basis: initial $(mc_bat) $(mc_lch)
 	$(call ok_msg,$@)
 
-$(mc_dir):
+$(mc_bat) $(mc_dir)\.minecraft: | $(mc_dir)
+$(mc_lch): | $(mc_dir)\.minecraft
+
+# To avoid being directly executed (not portable),
+# the launcher is hidden in `.minecraft\'.
+
+$(mc_dir) $(mc_dir)\.minecraft:
 	md $@
-$(mc_dir)\.minecraft: | $(mc_dir)
-	md $@
 
-# Hide the mc-launcher.jar in `.minecraft' folder
-# so that nobody will execute it directly by mistake (I thought).
-
-$(mc_lch): $(LAUNCHER_JAR) | $(mc_dir)\.minecraft
-	copy /Y $(call fix_path,$<) $@ > nul
-
-# Update when there is a newer $(LAUNCHER_JAR).
-
-$(mc_bat): | $(mc_dir)
+$(mc_bat):
 	>  $@ echo @ECHO OFF
 	>> $@ echo SET APPDATA=%%~dp0
 	>> $@ echo CD "%%~dp0\.minecraft"
 	>> $@ echo START %%* javaw -jar mc-launcher.jar
 
-# Sure, only the first line is beginning with `>'. The others are `>>'.
-# Using %~dp0 so that it doesn't matter where the current directory is.
-# Using %* so that we can add the argument /WAIT to the START command.
+# %* is for the /WAIT flag in $(run_mc).
+
+$(mc_lch): $(LAUNCHER_JAR)
+	copy /Y $(call fix_path,$<) $@ > nul
 
 
 first-run: portable-basis restore
@@ -223,15 +213,26 @@ $(mc_lib_fg): $(ori_dir) | $(SOURCE_DIR)/forge-*-*-installer.jar
 
 $(sou_dir): $(if $(forge),$(mc_lib_fg))
 
-restore: $(sou_dir) $(if $(wildcard $(des_dir)),$(des_jar) $(des_jsn))
-	@echo ** Restore the version $(des) to a pure one.
-	-md $(des_dir) > nul
-	copy /Y $(sou_jar) $(des_jar) > nul
-	jq ".id = \"$(des)\"" < $(sou_jsn) > $(des_jsn)
-	@echo ** Update the restore timestamp.
+.PHONY: restore
+
+restore: $(sou_dir) $(if $(im_mod),restore-jar) restore-jsn
+
+rsjsn_jq = .id = \"$(des)\" $(if $(im_mod),| del(.inheritsFrom))
+
+restore-jar restore-jsn: | $(des_dir)
+
+$(des_dir):
+	md $@
+
+restore-jar: $(wildcard $(des_jar))
+	copy /Y $(sou_jar) $(des_jar) || copy /Y $(ori_jar) $(des_jar)
 	> $@ echo.
 
-# The `restore' target restore $(des) to a pure one only if that was modified.
+restore-jsn: $(wildcard $(des_jsn)) Makefile
+	jq "$(rsjsn_jq)" < $(sou_jsn) > $(des_jsn)
+	> $@ echo.
+
+# `restore-*' targets restore $(des_*) only when they were modified.
 
 
 install-mods uninstall-mods: $(if $(MOD_LIST),first-run,portable-basis)
@@ -240,9 +241,6 @@ install-mods uninstall-mods: $(if $(MOD_LIST),first-run,portable-basis)
 .PHONY: -im-mod-clean -im-mod -im-mlm-clean -im-mlm
 
 # It's not recommended to execute these targets directly.
-
-im_mod = $(filter %.mod,$(MOD_LIST))
-im_mlm = $(filter %.mlm,$(MOD_LIST))
 
 install-mods: $(if $(im_mod),-im-mod-clean -im-mod)
 install-mods: $(if $(im_mlm),-im-mlm-clean -im-mlm)
@@ -385,7 +383,7 @@ $(mc_pfl):
 
 clean: packing-clean
 	-rd /S /Q $(mc_dir) extract
-	-del restore
+	-del restore-jar restore-jsn
 
 super-clean: clean
 	-rd /S /Q tool $(SOURCE_DIR)
